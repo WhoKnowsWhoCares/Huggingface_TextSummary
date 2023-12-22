@@ -8,6 +8,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+transformers = "^4.36.2"
+gradio = "^4.11.0"
+torch = "1.13.1"
+pydantic = "^2.5.3"
+pretrainedmodels = "^0.7.4"
+sentencepiece = "^0.1.99"
+protobuf = "^4.25.1"
+loguru = "^0.7.2"
 
 
 [tool.poetry.group.dev.dependencies]
