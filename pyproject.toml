@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "textsummarization"
+version = "0.1.0"
+description = "Analize text, create summary and sentiment"
+authors = ["Alexander <as.frantsev@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
