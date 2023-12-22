@@ -28,7 +28,7 @@ class Summarizer():
         logger.info(response_sentiment)
         result["sentiment"] = response_sentiment[0]["label"]
         
-        return f"Summary: {result['summary']}\n Sentiment:{result['sentiment']}"
+        return f"Summary:  {result['summary']}\n Sentiment:  {result['sentiment']}"
 
 pipe = Summarizer()
     
