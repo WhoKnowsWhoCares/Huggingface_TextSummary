@@ -1,6 +1,7 @@
 import re
 
 import gradio as gr
+from pydantic import BaseModel
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from loguru import logger
 
@@ -43,6 +44,21 @@ DEFAULT_RU_TEXT = """В результате взрыва на заправке,
 «Просим отложить визит на станцию переливания на завтра. Запасы крови есть, 
 доноров для их пополнения на данный час тоже уже немало», — написало ведомство.
 """
+
+class Request(BaseModel):
+    text: str
+
+
+class Result(BaseModel):
+    sentiment_score: float
+    sentiment_label: str
+    summary: str
+        
+    def to_str(self):
+        return f"Summary:  {self.summary}\n Sentiment:  {self.sentiment_label} ({self.sentiment_score:.3f})"    
+
+# class Response(BaseModel):
+#     results: List[Result] # list of Result objects
 
 class Summarizer():
     ru_summary_pipe: pipeline
@@ -96,21 +112,33 @@ class Summarizer():
                    'ru': self.ru_sentiment_pipe,}
         return summary[lang], sentiment[lang]
         
-    def summarize(self, text: str, lang: str = 'en') -> str:
-        result = {}
-        sum_pipe, sent_pipe = self.get_pipe(lang)
+    # def summarize(self, text: str, lang: str = 'en') -> str:
+    #     result = {}
+    #     sum_pipe, sent_pipe = self.get_pipe(lang)
         
+    #     response_summary = sum_pipe(text)
+    #     logger.info(response_summary)
+    #     result["summary"] = response_summary[0]["summary_text"]
+        
+    #     response_sentiment = sent_pipe(text)
+    #     logger.info(response_sentiment)
+    #     result["sentiment_label"] = response_sentiment[0]["label"]
+    #     result["sentiment_score"] = response_sentiment[0]["score"]
+        
+    #     return f"Summary:  {result['summary']}\n Sentiment:  {result['sentiment_label']} ({result['sentiment_score']:.3f})"    
+
+    def summarize(self, text: Request, lang: str = 'en') -> str:
+        sum_pipe, sent_pipe = self.get_pipe(lang)
         response_summary = sum_pipe(text)
         logger.info(response_summary)
-        result["summary"] = response_summary[0]["summary_text"]
-        
         response_sentiment = sent_pipe(text)
         logger.info(response_sentiment)
-        result["sentiment_label"] = response_sentiment[0]["label"]
-        result["sentiment_score"] = response_sentiment[0]["score"]
-        
-        return f"Summary:  {result['summary']}\n Sentiment:  {result['sentiment_label']} ({result['sentiment_score']:.3f})"    
-
+        result =  Result(
+            summary=response_summary[0]["summary_text"],
+            sentiment_label=response_sentiment[0]["label"],
+            sentiment_score=response_sentiment[0]["score"],
+        )
+        return result
 
 if __name__ == "__main__":
     pipe = Summarizer()
@@ -133,12 +161,12 @@ if __name__ == "__main__":
                 ru_inbtn = gr.Button("Запустить")
                 
         en_inbtn.click(
-            pipe.summarize,
+            pipe.summarize.to_str(),
             [en_inputs, en_lang],
             [en_outputs],
         )
         ru_inbtn.click(
-            pipe.summarize,
+            pipe.summarize.to_str(),
             [ru_inputs, ru_lang],
             [ru_outputs],
         )
