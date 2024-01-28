@@ -75,10 +75,10 @@ class Summarizer():
         self.ru_sentiment_pipe = pipeline("sentiment-analysis", model=RU_SENTIMENT_MODEL)
         self.en_summary_pipe = sum_pipe
         self.en_sentiment_pipe = pipeline("sentiment-analysis", model=EN_SENTIMENT_MODEL)
-        
-        
-    def mT5_summarize(self, text: str) -> str:
 
+    def mT5_summarize(self, text: str) -> str:
+        '''Handle text with mT5 model without pipeline'''
+        
         WHITESPACE_HANDLER = lambda k: re.sub('\s+', ' ', re.sub('\n+', ' ', k.strip()))
 
         input_ids = self.sum_tokenizer(
@@ -111,23 +111,8 @@ class Summarizer():
         sentiment = {'en': self.en_sentiment_pipe,
                    'ru': self.ru_sentiment_pipe,}
         return summary[lang], sentiment[lang]
-        
-    # def summarize(self, text: str, lang: str = 'en') -> str:
-    #     result = {}
-    #     sum_pipe, sent_pipe = self.get_pipe(lang)
-        
-    #     response_summary = sum_pipe(text)
-    #     logger.info(response_summary)
-    #     result["summary"] = response_summary[0]["summary_text"]
-        
-    #     response_sentiment = sent_pipe(text)
-    #     logger.info(response_sentiment)
-    #     result["sentiment_label"] = response_sentiment[0]["label"]
-    #     result["sentiment_score"] = response_sentiment[0]["score"]
-        
-    #     return f"Summary:  {result['summary']}\n Sentiment:  {result['sentiment_label']} ({result['sentiment_score']:.3f})"    
 
-    def summarize(self, text: Request, lang: str = 'en') -> str:
+    def summarize(self, text: Request, lang: str = 'en') -> Result:
         sum_pipe, sent_pipe = self.get_pipe(lang)
         response_summary = sum_pipe(text)
         logger.info(response_summary)
@@ -139,6 +124,9 @@ class Summarizer():
             sentiment_score=response_sentiment[0]["score"],
         )
         return result
+    
+    def summ(self, text: Request, lang: str = 'en') -> str:
+        return self.summarize(text, lang).to_str()
 
 if __name__ == "__main__":
     pipe = Summarizer()
@@ -161,12 +149,12 @@ if __name__ == "__main__":
                 ru_inbtn = gr.Button("Запустить")
                 
         en_inbtn.click(
-            pipe.summarize.to_str(),
+            pipe.summ,
             [en_inputs, en_lang],
             [en_outputs],
         )
         ru_inbtn.click(
-            pipe.summarize.to_str(),
+            pipe.summ,
             [ru_inputs, ru_lang],
             [ru_outputs],
         )
