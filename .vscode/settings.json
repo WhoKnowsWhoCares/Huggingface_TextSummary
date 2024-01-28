@@ -1,8 +1,4 @@
 {
-    "python.linting.pylint" : false,
-    "python.linting.flake8" : true,
-    "python.linting.enabled" : true,
-    "python.formatting.black" : true,
     "editor.formatOnSave": true,
     "python.linting.flake8Args":[
         "--max-line-length=88"
@@ -13,4 +9,6 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
+    "black-formatter.importStrategy": "fromEnvironment",
+    "flake8.importStrategy": "fromEnvironment",
 }

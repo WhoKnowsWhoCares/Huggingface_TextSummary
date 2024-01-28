@@ -2,7 +2,7 @@ import re
 
 import gradio as gr
 from pydantic import BaseModel
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import pipeline
 from loguru import logger
 
 # from pydantic import BaseModel
@@ -17,7 +17,7 @@ EN_SUMMARY_MODEL = "csebuetnlp/mT5_multilingual_XLSum"
 EN_SENTIMENT_MODEL = "distilbert-base-uncased-finetuned-sst-2-english"
 
 
-DEFAULT_EN_TEXT ="""Flags on official buildings are being flown at half-mast and a minute's silence will be observed at midday.
+DEFAULT_EN_TEXT = """Flags on official buildings are being flown at half-mast and a minute's silence will be observed at midday.
 Fourteen people were shot dead at the Faculty of Arts building of Charles University in the capital by a student who then killed himself.
 Police are working to uncover the motive behind the attack.
 It is one of the deadliest assaults by a lone gunman in Europe this century.
@@ -45,6 +45,7 @@ DEFAULT_RU_TEXT = """В результате взрыва на заправке,
 доноров для их пополнения на данный час тоже уже немало», — написало ведомство.
 """
 
+
 class Request(BaseModel):
     text: str
 
@@ -53,14 +54,16 @@ class Result(BaseModel):
     sentiment_score: float
     sentiment_label: str
     summary: str
-        
+
     def to_str(self):
-        return f"Summary:  {self.summary}\n Sentiment:  {self.sentiment_label} ({self.sentiment_score:.3f})"    
+        return f"Summary:  {self.summary}\nSentiment:  {self.sentiment_label} ({self.sentiment_score:.3f})"
+
 
 # class Response(BaseModel):
 #     results: List[Result] # list of Result objects
 
-class Summarizer():
+
+class Summarizer:
     ru_summary_pipe: pipeline
     ru_sentiment_pipe: pipeline
     en_summary_pipe: pipeline
@@ -68,65 +71,72 @@ class Summarizer():
     # sum_model_name = "csebuetnlp/mT5_multilingual_XLSum"
     # sum_tokenizer = AutoTokenizer.from_pretrained(sum_model_name)
     # sum_model = AutoModelForSeq2SeqLM.from_pretrained(sum_model_name)
-    
+
     def __init__(self) -> None:
-        sum_pipe = pipeline("summarization", model=RU_SUMMARY_MODEL, max_length=100, truncation=True)
+        sum_pipe = pipeline(
+            "summarization", model=RU_SUMMARY_MODEL, max_length=100, truncation=True
+        )
         self.ru_summary_pipe = sum_pipe
-        self.ru_sentiment_pipe = pipeline("sentiment-analysis", model=RU_SENTIMENT_MODEL)
+        self.ru_sentiment_pipe = pipeline(
+            "sentiment-analysis", model=RU_SENTIMENT_MODEL
+        )
         self.en_summary_pipe = sum_pipe
-        self.en_sentiment_pipe = pipeline("sentiment-analysis", model=EN_SENTIMENT_MODEL)
+        self.en_sentiment_pipe = pipeline(
+            "sentiment-analysis", model=EN_SENTIMENT_MODEL
+        )
 
     def mT5_summarize(self, text: str) -> str:
-        '''Handle text with mT5 model without pipeline'''
-        
-        WHITESPACE_HANDLER = lambda k: re.sub('\s+', ' ', re.sub('\n+', ' ', k.strip()))
+        """Handle text with mT5 model without pipeline"""
+
+        def whitespace_handler(text: str):
+            return re.sub("\s+", " ", re.sub("\n+", " ", text.strip()))
 
         input_ids = self.sum_tokenizer(
-            [WHITESPACE_HANDLER(text)],
+            [whitespace_handler(text)],
             return_tensors="pt",
             padding="max_length",
             truncation=True,
-            max_length=512
+            max_length=512,
         )["input_ids"]
 
         output_ids = self.sum_model.generate(
-            input_ids=input_ids,
-            max_length=84,
-            no_repeat_ngram_size=2,
-            num_beams=4
+            input_ids=input_ids, max_length=84, no_repeat_ngram_size=2, num_beams=4
         )[0]
 
         summary = self.sum_tokenizer.decode(
-            output_ids,
-            skip_special_tokens=True,
-            clean_up_tokenization_spaces=False
+            output_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
 
         return summary
 
     def get_pipe(self, lang: str):
-        logger.info(f'Pipe language: {lang}')
-        summary = {'en': self.en_summary_pipe,
-                   'ru': self.ru_summary_pipe,}
-        sentiment = {'en': self.en_sentiment_pipe,
-                   'ru': self.ru_sentiment_pipe,}
+        logger.info(f"Pipe language: {lang}")
+        summary = {
+            "en": self.en_summary_pipe,
+            "ru": self.ru_summary_pipe,
+        }
+        sentiment = {
+            "en": self.en_sentiment_pipe,
+            "ru": self.ru_sentiment_pipe,
+        }
         return summary[lang], sentiment[lang]
 
-    def summarize(self, text: Request, lang: str = 'en') -> Result:
+    def summarize(self, req: Request, lang: str = "en") -> Result:
         sum_pipe, sent_pipe = self.get_pipe(lang)
-        response_summary = sum_pipe(text)
+        response_summary = sum_pipe(req.text)
         logger.info(response_summary)
-        response_sentiment = sent_pipe(text)
+        response_sentiment = sent_pipe(req.text)
         logger.info(response_sentiment)
-        result =  Result(
+        result = Result(
             summary=response_summary[0]["summary_text"],
             sentiment_label=response_sentiment[0]["label"],
             sentiment_score=response_sentiment[0]["score"],
         )
         return result
-    
-    def summ(self, text: Request, lang: str = 'en') -> str:
-        return self.summarize(text, lang).to_str()
+
+    def summ(self, req: Request, lang: str = "en") -> str:
+        return self.summarize(req, lang).to_str()
+
 
 if __name__ == "__main__":
     pipe = Summarizer()
@@ -134,20 +144,46 @@ if __name__ == "__main__":
     with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=2, min_width=600):
-                en_sum_description=gr.Markdown(value=f"Model for Summary: {EN_SUMMARY_MODEL}")
-                en_sent_description=gr.Markdown(value=f"Model for Sentiment: {EN_SENTIMENT_MODEL}")
-                en_inputs=gr.Textbox(label="en_input", lines=5, value=DEFAULT_EN_TEXT, placeholder=DEFAULT_EN_TEXT)
-                en_lang=gr.Textbox(value='en',visible=False)
-                en_outputs=gr.Textbox(label="en_output", lines=5, placeholder="Summary and Sentiment would be here...")
+                en_sum_description = gr.Markdown(
+                    value=f"Model for Summary: {EN_SUMMARY_MODEL}"
+                )
+                en_sent_description = gr.Markdown(
+                    value=f"Model for Sentiment: {EN_SENTIMENT_MODEL}"
+                )
+                en_inputs = gr.Textbox(
+                    label="en_input",
+                    lines=5,
+                    value=DEFAULT_EN_TEXT,
+                    placeholder=DEFAULT_EN_TEXT,
+                )
+                en_lang = gr.Textbox(value="en", visible=False)
+                en_outputs = gr.Textbox(
+                    label="en_output",
+                    lines=5,
+                    placeholder="Summary and Sentiment would be here...",
+                )
                 en_inbtn = gr.Button("Proceed")
             with gr.Column(scale=2, min_width=600):
-                ru_sum_description=gr.Markdown(value=f"Model for Summary: {RU_SUMMARY_MODEL}")
-                ru_sent_description=gr.Markdown(value=f"Model for Sentiment: {RU_SENTIMENT_MODEL}")
-                ru_inputs=gr.Textbox(label="ru_input", lines=5, value=DEFAULT_RU_TEXT, placeholder=DEFAULT_RU_TEXT)
-                ru_lang=gr.Textbox(value='ru',visible=False)
-                ru_outputs=gr.Textbox(label="ru_output", lines=5, placeholder="Здесь будет обобщение и эмоциональный окрас текста...")
+                ru_sum_description = gr.Markdown(
+                    value=f"Model for Summary: {RU_SUMMARY_MODEL}"
+                )
+                ru_sent_description = gr.Markdown(
+                    value=f"Model for Sentiment: {RU_SENTIMENT_MODEL}"
+                )
+                ru_inputs = gr.Textbox(
+                    label="ru_input",
+                    lines=5,
+                    value=DEFAULT_RU_TEXT,
+                    placeholder=DEFAULT_RU_TEXT,
+                )
+                ru_lang = gr.Textbox(value="ru", visible=False)
+                ru_outputs = gr.Textbox(
+                    label="ru_output",
+                    lines=5,
+                    placeholder="Здесь будет обобщение и эмоциональный окрас текста...",
+                )
                 ru_inbtn = gr.Button("Запустить")
-                
+
         en_inbtn.click(
             pipe.summ,
             [en_inputs, en_lang],
@@ -158,4 +194,4 @@ if __name__ == "__main__":
             [ru_inputs, ru_lang],
             [ru_outputs],
         )
-    demo.launch(show_api=False)   
+    demo.launch(show_api=False)
