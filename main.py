@@ -1,6 +1,13 @@
+import os
 import gradio as gr
-from fastapi import FastAPI
-from app import Summarizer, Request, Result
+from pathlib import Path
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
+
+from app import Summarizer, TextRequest, Result
 from app import (
     EN_SENTIMENT_MODEL,
     EN_SUMMARY_MODEL,
@@ -9,18 +16,58 @@ from app import (
 )
 from app import DEFAULT_EN_TEXT, DEFAULT_RU_TEXT
 
+load_dotenv()
+
+SITE_KEY = os.getenv("SITE_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
+VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
+
+# create FastAPI app
 app = FastAPI()
 pipe = Summarizer()
 
+# create a static directory to store the static files
+static_dir = Path("./static")
+static_dir.mkdir(parents=True, exist_ok=True)
+
+# mount FastAPI StaticFiles server
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/verify_page", response_class=HTMLResponse)
+async def verify_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="verification.html", context={"site_key": SITE_KEY}
+    )
+
+
+@app.get("/bad_request", response_class=HTMLResponse)
+async def bad_request(request: Request):
+    return templates.TemplateResponse("bad_request.html", {"request": request})
+
+
+@app.post("/verify")
+async def verify(request: Request):
+    # verify_response = requests.post(
+    #     url=VERIFY_URL,
+    #     data={
+    #         "secret": SECRET_KEY,
+    #         "response": request.form["g-recaptcha-response"],
+    #     },
+    # )
+    # print(verify_response.json())
+    return templates.TemplateResponse("bad_request.html", {"request": request})
+
 
 @app.post("/summ_ru", response_model=Result)
-async def ru_summ_api(request: Request):
+async def ru_summ_api(request: TextRequest):
     results = pipe.summarize(request.text, lang="ru")
     return results
 
 
 @app.post("/summ_en", response_model=Result)
-async def en_summ_api(request: Request):
+async def en_summ_api(request: TextRequest):
     results = pipe.summarize(request.text, lang="en")
     return results
 

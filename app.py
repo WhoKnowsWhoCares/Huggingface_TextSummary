@@ -46,7 +46,7 @@ DEFAULT_RU_TEXT = """В результате взрыва на заправке,
 """
 
 
-class Request(BaseModel):
+class TextRequest(BaseModel):
     text: str
 
 
@@ -121,7 +121,7 @@ class Summarizer:
         }
         return summary[lang], sentiment[lang]
 
-    def summarize(self, req: Request, lang: str = "en") -> Result:
+    def summarize(self, req: TextRequest, lang: str = "en") -> Result:
         sum_pipe, sent_pipe = self.get_pipe(lang)
         response_summary = sum_pipe(req.text)
         logger.info(response_summary)
@@ -134,8 +134,11 @@ class Summarizer:
         )
         return result
 
-    def summ(self, req: Request, lang: str = "en") -> str:
+    def summ(self, req: TextRequest, lang: str = "en") -> str:
         return self.summarize(req, lang).to_str()
+
+    def verified_summarize(self, req: TextRequest, lang: str = "en") -> str:
+        return "verified"
 
 
 if __name__ == "__main__":
