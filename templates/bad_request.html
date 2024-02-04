@@ -1,12 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <link rel="stylesheet" href="{{ url_for('static',path='/css/style.css')}}"/> 
-        <title>Bad request</title>
-    </head>
-    <body>
-        <h1>Sorry, your request not allowed</h1>
-    </body>
-</html>
+{% extends "components/_base.html" %}
+
+{% block page_content %}
+<title> Bad Request </title>
+<meta name="description" content="">
+
+<!-- <h1>Sorry, your request not allowed</h1> -->
+<section class="bg-dark text-white pt-4 pb-5">
+    <div class="justify-content-center">
+        <h1 class="text-primary">Bad Request</h1>
+    </div>
+</section>
+{% endblock %}

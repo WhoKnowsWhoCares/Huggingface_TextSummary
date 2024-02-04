@@ -1,10 +1,12 @@
 import os
 import gradio as gr
-from pathlib import Path
+import random
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.exceptions import HTTPException
+from loguru import logger
 from dotenv import load_dotenv
 
 from app import Summarizer, TextRequest, Result
@@ -15,61 +17,87 @@ from app import (
     RU_SUMMARY_MODEL,
 )
 from app import DEFAULT_EN_TEXT, DEFAULT_RU_TEXT
+from models.forms import VerificationForm
 
 load_dotenv()
 
 SITE_KEY = os.getenv("SITE_KEY")
-SECRET_KEY = os.getenv("SECRET_KEY")
-VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
-# create FastAPI app
 app = FastAPI()
 pipe = Summarizer()
 
-# create a static directory to store the static files
-static_dir = Path("./static")
-static_dir.mkdir(parents=True, exist_ok=True)
-
 # mount FastAPI StaticFiles server
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/")
+async def index(request: Request):
+    return RedirectResponse("/index/", status_code=302)
 
 
 @app.get("/verify_page", response_class=HTMLResponse)
 async def verify_page(request: Request):
+    captcha_id = random.randint(1, 5)
     return templates.TemplateResponse(
-        request=request, name="verification.html", context={"site_key": SITE_KEY}
+        request=request,
+        name="verification.html",
+        context={"site_key": SITE_KEY, "captcha_id": captcha_id},
     )
-
-
-@app.get("/bad_request", response_class=HTMLResponse)
-async def bad_request(request: Request):
-    return templates.TemplateResponse("bad_request.html", {"request": request})
 
 
 @app.post("/verify")
 async def verify(request: Request):
-    # verify_response = requests.post(
-    #     url=VERIFY_URL,
-    #     data={
-    #         "secret": SECRET_KEY,
-    #         "response": request.form["g-recaptcha-response"],
-    #     },
-    # )
-    # print(verify_response.json())
-    return templates.TemplateResponse("bad_request.html", {"request": request})
+    form = VerificationForm(request)
+    await form.load_data()
+    if await form.is_valid():
+        logger.info("Form is valid")
+        return RedirectResponse("/index/", status_code=302)
+    return await verify_page(request)
 
 
 @app.post("/summ_ru", response_model=Result)
 async def ru_summ_api(request: TextRequest):
     results = pipe.summarize(request.text, lang="ru")
+    logger.info(results)
     return results
 
 
 @app.post("/summ_en", response_model=Result)
 async def en_summ_api(request: TextRequest):
     results = pipe.summarize(request.text, lang="en")
+    logger.info(results)
     return results
+
+
+@app.exception_handler(403)
+async def unavailable_error(request: Request, exc: HTTPException):
+    logger.warning("Error 403")
+    return templates.TemplateResponse(
+        "errors/error.html",
+        {"request": request, "message": "403. Sorry, this page unavailable."},
+        status_code=403,
+    )
+
+
+@app.exception_handler(404)
+async def not_found_error(request: Request, exc: HTTPException):
+    logger.warning("Error 404")
+    return templates.TemplateResponse(
+        "errors/error.html",
+        {"request": request, "message": "404. Page Not Found."},
+        status_code=404,
+    )
+
+
+@app.exception_handler(500)
+async def internal_error(request: Request, exc: HTTPException):
+    logger.warning("Error 500")
+    return templates.TemplateResponse(
+        "errors/error.html",
+        {"request": request, "message": "500. Oops. Something has gone wrong."},
+        status_code=500,
+    )
 
 
 with gr.Blocks() as demo:
@@ -127,4 +155,4 @@ with gr.Blocks() as demo:
     )
 
 # mounting at the root path
-app = gr.mount_gradio_app(app, demo, path="/")
+app = gr.mount_gradio_app(app, demo, path="/index")

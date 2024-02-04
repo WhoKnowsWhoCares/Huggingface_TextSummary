@@ -137,9 +137,6 @@ class Summarizer:
     def summ(self, req: TextRequest, lang: str = "en") -> str:
         return self.summarize(req, lang).to_str()
 
-    def verified_summarize(self, req: TextRequest, lang: str = "en") -> str:
-        return "verified"
-
 
 if __name__ == "__main__":
     pipe = Summarizer()

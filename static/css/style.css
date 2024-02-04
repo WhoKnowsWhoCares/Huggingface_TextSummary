@@ -52,7 +52,7 @@ body {
 }
 
 .google-icon {
-    background: url("https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg") transparent 5px 50% no-repeat;
+    background: url("/static/favicon/favicon.svg") transparent 5px 50% no-repeat;
     display: inline-block;
     vertical-align: middle;
     width: 35px;

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    {% include 'components/_head.html' %}
+    {% block page_head %}{% endblock %}
+</head>
+
+<body style="width: 100%; margin: 0; padding: 0; display: flex; 
+    flex-direction: column; flex-grow: 1;" class="bg-dark">            
+
+    {% include 'components/_page_loader.html' %}
+    {% with messages = get_flashed_messages(request) %}
+        {%if messages %}
+            {% for message in messages %}
+                <div class="alert alert-primary">
+                    <strong> {{ message }} </strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block page_content %}{% endblock %}
+
+    {% include 'components/_scripts.html' %}
+    
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+    "name":"Frants Tech Site","short_name":"FTech","icons":[
+        {"src":"/static/favicon/favicon-64.png","sizes":"64x64","type":"image/png"}
+    ],
+    "theme_color":"#0C1C30","background_color":"#0C1C30","display":"standalone"
+}
