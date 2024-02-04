@@ -1,11 +1,14 @@
 import os
 import gradio as gr
 import random
-from fastapi import FastAPI, Request
+import secrets
+from typing import Annotated
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import HTTPException
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -22,9 +25,13 @@ from models.forms import VerificationForm
 load_dotenv()
 
 SITE_KEY = os.getenv("SITE_KEY")
+API_USER = os.getenv("API_USER")
+API_PWD = os.getenv("API_PWD")
+users = set()
 
 app = FastAPI()
 pipe = Summarizer()
+security = HTTPBasic()
 
 # mount FastAPI StaticFiles server
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -56,15 +63,41 @@ async def verify(request: Request):
     return await verify_page(request)
 
 
+def get_current_username(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = bytes(API_USER, "utf-8")
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = bytes(API_PWD, "utf-8")
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+
 @app.post("/summ_ru", response_model=Result)
-async def ru_summ_api(request: TextRequest):
+async def ru_summ_api(
+    request: TextRequest, username: Annotated[str, Depends(get_current_username)]
+):
     results = pipe.summarize(request.text, lang="ru")
     logger.info(results)
     return results
 
 
 @app.post("/summ_en", response_model=Result)
-async def en_summ_api(request: TextRequest):
+async def en_summ_api(
+    request: TextRequest, username: Annotated[str, Depends(get_current_username)]
+):
     results = pipe.summarize(request.text, lang="en")
     logger.info(results)
     return results

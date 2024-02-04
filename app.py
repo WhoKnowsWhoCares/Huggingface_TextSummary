@@ -123,9 +123,9 @@ class Summarizer:
 
     def summarize(self, req: TextRequest, lang: str = "en") -> Result:
         sum_pipe, sent_pipe = self.get_pipe(lang)
-        response_summary = sum_pipe(req.text)
+        response_summary = sum_pipe(req)
         logger.info(response_summary)
-        response_sentiment = sent_pipe(req.text)
+        response_sentiment = sent_pipe(req)
         logger.info(response_sentiment)
         result = Result(
             summary=response_summary[0]["summary_text"],
