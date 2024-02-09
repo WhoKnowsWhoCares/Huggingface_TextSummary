@@ -111,15 +111,11 @@ class Summarizer:
 
     def get_pipe(self, lang: str):
         logger.info(f"Pipe language: {lang}")
-        summary = {
-            "en": self.en_summary_pipe,
-            "ru": self.ru_summary_pipe,
-        }
-        sentiment = {
-            "en": self.en_sentiment_pipe,
-            "ru": self.ru_sentiment_pipe,
-        }
-        return summary[lang], sentiment[lang]
+        if lang == "en":
+            return self.en_summary_pipe, self.en_sentiment_pipe
+        if lang == "ru":
+            return self.ru_summary_pipe, self.ru_sentiment_pipe
+        raise ValueError(f"Language {lang} is not supported")
 
     def summarize(self, req: TextRequest, lang: str = "en") -> Result:
         sum_pipe, sent_pipe = self.get_pipe(lang)
@@ -134,7 +130,7 @@ class Summarizer:
         )
         return result
 
-    def summ(self, req: TextRequest, lang: str = "en") -> str:
+    def get_summary(self, req: TextRequest, lang: str = "en") -> str:
         return self.summarize(req, lang).to_str()
 
 
@@ -185,12 +181,12 @@ if __name__ == "__main__":
                 ru_inbtn = gr.Button("Запустить")
 
         en_inbtn.click(
-            pipe.summ,
+            pipe.get_summary,
             [en_inputs, en_lang],
             [en_outputs],
         )
         ru_inbtn.click(
-            pipe.summ,
+            pipe.get_summary,
             [ru_inputs, ru_lang],
             [ru_outputs],
         )
