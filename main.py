@@ -6,16 +6,18 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from typing import Annotated
 from loguru import logger
-from app import Summarizer, TextRequest
+from app import Summarizer, TextRequest, Result
 from app import (
+    DEFAULT_EN_TEXT,
     EN_SENTIMENT_MODEL,
     EN_SUMMARY_MODEL,
 )
-from app import DEFAULT_EN_TEXT
+
 from models.forms import VerificationForm
 from models.exceptions import MyHTTPException, my_http_exception_handler
-from models.security import AuthUsers
+from models.security import AuthUsers, check_api_credentials
 
 
 app = FastAPI()
@@ -70,20 +72,27 @@ async def verify_page(request: Request):
 
 
 @app.post("/verify")
-async def verify(request: Request, checked_user: bool = Depends(users.get_cookie_data)):
+async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     form = VerificationForm(request)
     await form.load_data()
     if await form.is_valid():
         logger.info("Form is valid")
         response = RedirectResponse("/index", status_code=302)
-        if not checked_user:
-            user_token = users.generate_user_token()
-            users.add_user_session(user_token)
-            response.set_cookie(key="Authorization", value=user_token)
-            logger.info(f"Issued token: {user_token}")
+        response.set_cookie(key="Authorization", value=token)
         return response
     logger.info("Validation error")
     return await verify_page(request)
+
+
+@app.post("/get_summary_api", response_model=Result)
+async def summ_api(
+    request: TextRequest,
+    lang: str,
+    username: Annotated[str, Depends(check_api_credentials)],
+):
+    results = pipe.summarize(request.text, lang=lang)
+    logger.info(f"API response: {results}")
+    return results
 
 
 @app.get("/")
@@ -100,7 +109,7 @@ def get_summary(text: TextRequest, lang: str, request: gr.Request):
     return "Sorry. You are not verified."
 
 
-with gr.Blocks() as demo:
+with gr.Blocks(css="/static/css/style.css") as demo:
     with gr.Column(scale=2, min_width=600):
         en_sum_description = gr.Markdown(value=f"Model for Summary: {EN_SUMMARY_MODEL}")
         en_sent_description = gr.Markdown(
@@ -130,6 +139,5 @@ with gr.Blocks() as demo:
         [en_outputs],
     )
 
-# demo.launch(server_name="127.0.0.1", server_port=8080, share=False)
 # mounting at the root path
 app = gr.mount_gradio_app(app, demo, path="/index")

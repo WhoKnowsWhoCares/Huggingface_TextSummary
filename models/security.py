@@ -21,9 +21,9 @@ security = HTTPBasic()
 
 class AuthUsers:
     REQUESTS_LIMIT = 3  # 3 REQUESTS PER MINUTE
-    AUTH_TIME = 10  # 10 MINUTES
+    AUTH_TIME = 1  # 1 MINUTES
     users: set
-    users_auth: defaultdict(list)
+    users_auth: defaultdict
 
     def __init__(self):
         self.users = set()
@@ -66,12 +66,14 @@ class AuthUsers:
 
     def get_cookie_data(
         self, user_token: str = Cookie(default=None, alias="Authorization")
-    ) -> list:
-        if not user_token or user_token not in self.users:
+    ) -> str:
+        if not user_token:
+            user_token = self.generate_user_token()
+        if user_token not in self.users:
+            self.users.add(user_token)
             logger.info("Unauthorized user")
-            return False
         logger.info(f"Verified user with token: {user_token}")
-        return True
+        return user_token
 
 
 credentials_exception = MyHTTPException(
