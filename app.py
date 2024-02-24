@@ -1,5 +1,4 @@
 import re
-
 import gradio as gr
 from pydantic import BaseModel
 from transformers import pipeline

@@ -3,7 +3,7 @@
 {% block page_head %}
 <title> Verification Page </title>
 <meta name="description" content="">
-<script async src="https://www.google.com/recaptcha/api.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script async>
     function onSubmit(token){document.getElementById("verify_form").submit();}
 </script>
@@ -11,7 +11,6 @@
 
 {% block page_content %}
 
-<!-- <h1>Sorry, your request not allowed</h1> -->
 <section class="col-3 bg-dark text-white pt-4 pb-5">
     <div class="justify-content-center">
         <h1 class="text-primary">Verification Page</h1>
@@ -25,7 +24,8 @@
                 data-callback="onSubmit" 
                 data-action="submit">Submit
             </button> -->
-            <!-- <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div> -->
+            <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div>
+            <br>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>

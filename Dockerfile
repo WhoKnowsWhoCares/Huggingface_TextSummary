@@ -30,6 +30,9 @@ ENV VIRTUAL_ENV=/app/.venv \
 COPY --from=builder /app/.venv /app/.venv
 
 # Necessary Files
+COPY models/ /app/models/
+COPY static/ /app/static/
+COPY templates/ /app/templates/
 COPY main.py app.py /app/
 
 # Expose port

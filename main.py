@@ -1,28 +1,26 @@
+import os
+import asyncio
 import random
 import gradio as gr
 
-# from fastapi.security import APIKeyHeader
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Annotated
 from loguru import logger
-from app import Summarizer, TextRequest, Result
-from app import (
-    DEFAULT_EN_TEXT,
-    EN_SENTIMENT_MODEL,
-    EN_SUMMARY_MODEL,
-)
-
+from models.model import Summarizer, TextRequest, Result, DEFAULT_TEXT, SUMMARY_MODEL
 from models.forms import VerificationForm
 from models.exceptions import MyHTTPException, my_http_exception_handler
 from models.security import AuthUsers, check_api_credentials
+from dotenv import load_dotenv
 
+load_dotenv()
+SITE_KEY = os.getenv("SITE_KEY")
 
 app = FastAPI()
-pipe = Summarizer()
 users = AuthUsers()
+pipe = Summarizer()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -37,7 +35,11 @@ templates = Jinja2Templates(directory="templates")
 
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 
-
+@app.on_event("startup")
+async def set_event_loop():
+    event_loop = asyncio.get_event_loop()
+    pipe.set_loop(event_loop)
+    
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
@@ -67,7 +69,7 @@ async def verify_page(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="verification.html",
-        context={"captcha_id": captcha_id},
+        context={"captcha_id": captcha_id, "site_key": SITE_KEY},
     )
 
 
@@ -84,59 +86,57 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     return await verify_page(request)
 
 
-@app.post("/get_summary_api", response_model=Result)
-async def summ_api(
-    request: TextRequest,
-    lang: str,
-    username: Annotated[str, Depends(check_api_credentials)],
-):
-    results = pipe.summarize(request.text, lang=lang)
-    logger.info(f"API response: {results}")
-    return results
-
-
 @app.get("/")
 async def get_main_page():
     return RedirectResponse("/index", status_code=302)
 
 
-def get_summary(text: TextRequest, lang: str, request: gr.Request):
-    token = request.cookies["Authorization"]
-    if users.verify_user(token):
-        users.add_user_session(token)
-        return pipe.get_summary(text, lang)
-    logger.info("User not verified")
+@app.post("/get_summary_api", response_model=Result)
+async def summ_api(
+    request: TextRequest,
+    username: Annotated[str, Depends(check_api_credentials)],
+):
+    results = pipe.summarize(request.text)
+    logger.info(f"API response: {results}")
+    return results
+
+
+def get_summary(text: TextRequest, request: gr.Request):
+    try:
+        token = request.cookies["Authorization"]
+        if users.verify_user(token):
+            users.add_user_session(token)
+            return pipe.get_summary(text)
+    except KeyError:
+        logger.error("User not verified")
+    except Exception as e:
+        logger.error(e)
     return "Sorry. You are not verified."
 
 
 with gr.Blocks(css="/static/css/style.css") as demo:
     with gr.Column(scale=2, min_width=600):
-        en_sum_description = gr.Markdown(value=f"Model for Summary: {EN_SUMMARY_MODEL}")
-        en_sent_description = gr.Markdown(
-            value=f"Model for Sentiment: {EN_SENTIMENT_MODEL}"
-        )
+        sum_description = gr.Markdown(value=f"Model for Summary: {SUMMARY_MODEL}")
         verify_href = gr.Markdown(
             value="Available only for verified users.[Click here for verification.](/verify_page)"
         )
-        en_inputs = gr.Textbox(
+        inputs = gr.Textbox(
             label="Input",
             lines=5,
-            value=DEFAULT_EN_TEXT,
-            placeholder=DEFAULT_EN_TEXT,
+            value=DEFAULT_TEXT,
+            placeholder=DEFAULT_TEXT,
         )
-        # en_lang = gr.Textbox(value="en", visible=False)
-        en_lang = gr.Radio(["en", "ru"], value="en", label="Language")
-        en_outputs = gr.Textbox(
+        outputs = gr.Textbox(
             label="Output",
             lines=5,
             placeholder="Summary and Sentiment would be here...",
         )
-        en_inbtn = gr.Button("Proceed")
+        inbtn = gr.Button("Proceed")
 
-    en_inbtn = en_inbtn.click(
+    inbtn = inbtn.click(
         get_summary,
-        [en_inputs, en_lang],
-        [en_outputs],
+        [inputs],
+        [outputs],
     )
 
 # mounting at the root path

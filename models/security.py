@@ -35,7 +35,6 @@ class AuthUsers:
     def verify_user(self, user_token: str) -> bool:
         logger.info(f"Check user token: {user_token}")
         if user_token in self.users:
-            print(self.users_auth[user_token])
             if len(self.users_auth[user_token]) < self.REQUESTS_LIMIT:
                 return True
             elif datetime.now() - self.users_auth[user_token][
@@ -59,7 +58,6 @@ class AuthUsers:
         else:
             self.users.add(user_token)
             self.users_auth.setdefault(user_token, []).append(datetime.now())
-            print(self.users_auth[user_token])
             while len(self.users_auth[user_token]) > self.REQUESTS_LIMIT:
                 self.users_auth[user_token].pop(0)
         logger.info(f"User's {user_token} session added")
