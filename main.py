@@ -35,11 +35,13 @@ templates = Jinja2Templates(directory="templates")
 
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 
+
 @app.on_event("startup")
 async def set_event_loop():
     event_loop = asyncio.get_event_loop()
     pipe.set_loop(event_loop)
-    
+
+
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
