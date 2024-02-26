@@ -7,6 +7,9 @@ on:
     types:
       - completed
 
+env:
+  PORT: 6001
+
 jobs:
   prepare-environment:
     runs-on: self-hosted
@@ -37,6 +40,8 @@ jobs:
           echo CAPTCHA3=${{ secrets.CAPTCHA3 }} >> config.env
           echo CAPTCHA4=${{ secrets.CAPTCHA4 }} >> config.env
           echo CAPTCHA5=${{ secrets.CAPTCHA5 }} >> config.env
+
+          echo PORT=${{ env.PORT }} >> config.env
 
       - name: Create docker-compose
         run: |
