@@ -20,7 +20,7 @@ jobs:
         uses: andstor/file-existence-action@v3
         with:
           files: "docker-compose.yml"
-      - name: Stop and remove containers, networks
+      - name: Stop containers
         if: steps.check_files.outputs.files_exists == 'true'
         run: docker compose down
       - name: Remove unused data
