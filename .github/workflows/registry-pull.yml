@@ -26,9 +26,18 @@ jobs:
       - name: Create env file
         run: |
           touch config.env
-          echo BOT_TOKEN=${{ secrets.BOT_TOKEN }} >> config.env
-          echo CHAT_ID=${{ secrets.CHAT_ID }} >> config.env
-          echo SD_SERVER_URL=${{ secrets.SD_SERVER_URL }} >> config.env
+          echo SITE_KEY=${{ secrets.SITE_KEY }} >> config.env
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> config.env
+          echo API_USER=${{ secrets.API_USER }} >> config.env
+          echo API_PWD=${{ secrets.API_PWD }} >> config.env
+          echo API_KEY=${{ secrets.API_KEY }} >> config.env
+
+          echo captcha1=${{ secrets.captcha1 }} >> config.env
+          echo captcha2=${{ secrets.captcha2 }} >> config.env
+          echo captcha3=${{ secrets.captcha3 }} >> config.env
+          echo captcha4=${{ secrets.captcha4 }} >> config.env
+          echo captcha5=${{ secrets.captcha5 }} >> config.env
+
       - name: Create docker-compose
         run: |
           touch docker-compose.yml
