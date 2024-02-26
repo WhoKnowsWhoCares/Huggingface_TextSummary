@@ -1,15 +1,15 @@
 version: "3.8"
 services:
-  app:
-    container_name: summary-app
-    restart: unless-stopped
+  TextSummary:
+    container_name: textsummary
+    restart: always
     env_file:
-      - .env
-    # environment:
-    #   PGHOST: 'db'
-    build:
-      context: .
-      dockerfile: Dockerfile
+      # - .env
+      - prod.env
+    image: registry.frants.site/textsummary:latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     ports:
       - "${PORT}:${PORT}"
     expose:

@@ -9,13 +9,19 @@ on:
 
 env:
   PORT: 6001
+  ENV_FILE: prod.env
 
 jobs:
   prepare-environment:
     runs-on: self-hosted
     steps:
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v3
+        with:
+          files: "docker-compose.yml"
       - name: Stop and remove containers, networks
-        if: ${{ hashFiles('docker-compose.yml') != '' }}
+        if: steps.check_files.outputs.files_exists == 'true'
         run: docker compose down
       - name: Remove unused data
         run: docker system prune -a -f
@@ -29,28 +35,28 @@ jobs:
     steps:
       - name: Create env file
         run: |
-          touch config.env
-          echo SITE_KEY=${{ secrets.SITE_KEY }} >> config.env
-          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> config.env
-          echo API_USER=${{ secrets.API_USER }} >> config.env
-          echo API_PWD=${{ secrets.API_PWD }} >> config.env
-          echo API_KEY=${{ secrets.API_KEY }} >> config.env
+          touch ${{ env.ENV_FILE }}
+          echo SITE_KEY=${{ secrets.SITE_KEY }} >> ${{ env.ENV_FILE }}
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> ${{ env.ENV_FILE }}
+          echo API_USER=${{ secrets.API_USER }} >> ${{ env.ENV_FILE }}
+          echo API_PWD=${{ secrets.API_PWD }} >> ${{ env.ENV_FILE }}
+          echo API_KEY=${{ secrets.API_KEY }} >> ${{ env.ENV_FILE }}
 
-          echo CAPTCHA1=${{ secrets.CAPTCHA1 }} >> config.env
-          echo CAPTCHA2=${{ secrets.CAPTCHA2 }} >> config.env
-          echo CAPTCHA3=${{ secrets.CAPTCHA3 }} >> config.env
-          echo CAPTCHA4=${{ secrets.CAPTCHA4 }} >> config.env
-          echo CAPTCHA5=${{ secrets.CAPTCHA5 }} >> config.env
+          echo CAPTCHA1=${{ secrets.CAPTCHA1 }} >> ${{ env.ENV_FILE }}
+          echo CAPTCHA2=${{ secrets.CAPTCHA2 }} >> ${{ env.ENV_FILE }}
+          echo CAPTCHA3=${{ secrets.CAPTCHA3 }} >> ${{ env.ENV_FILE }}
+          echo CAPTCHA4=${{ secrets.CAPTCHA4 }} >> ${{ env.ENV_FILE }}
+          echo CAPTCHA5=${{ secrets.CAPTCHA5 }} >> ${{ env.ENV_FILE }}
 
-          echo PORT=${{ env.PORT }} >> config.env
+          echo PORT=${{ env.PORT }} >> ${{ env.ENV_FILE }}
 
-      - name: Create docker-compose
-        run: |
-          touch docker-compose.yml
-          echo -e "version: \"3.8\"" >> docker-compose.yml
-          echo -e "services: " >> docker-compose.yml
-          echo -e "  TextSummary: " >> docker-compose.yml
-          echo -e "    image: registry.frants.site/textsummary:latest" >> docker-compose.yml
-          echo -e "    env_file: config.env" >> docker-compose.yml
+      - name: Checkout docker-compose file
+        uses: actions/checkout@v3
+        with:
+          sparse-checkout: |
+            docker-compose.yml
+          sparse-checkout-cone-mode: false
+      - name: Create data folder
+        run: mkdir ./data
       - name: Run docker-compose
         run: docker compose up -d

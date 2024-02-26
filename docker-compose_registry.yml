@@ -1,7 +1,0 @@
-version: "3.8"
-
-services:
-  TextSummary:
-    image: registry.frants.site/textsummary:latest
-    env_file: .env #config.env
-    restart: always
