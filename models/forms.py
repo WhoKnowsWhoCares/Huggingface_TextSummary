@@ -27,7 +27,7 @@ class VerificationForm:
 
     async def is_valid(self):
         if not self.captcha or self.captcha.strip().lower() != os.getenv(
-            f"captcha{self.captcha_id}"
+            f"CAPTCHA{self.captcha_id}"
         ):
             return False
         return True

@@ -32,11 +32,11 @@ jobs:
           echo API_PWD=${{ secrets.API_PWD }} >> config.env
           echo API_KEY=${{ secrets.API_KEY }} >> config.env
 
-          echo captcha1=${{ secrets.captcha1 }} >> config.env
-          echo captcha2=${{ secrets.captcha2 }} >> config.env
-          echo captcha3=${{ secrets.captcha3 }} >> config.env
-          echo captcha4=${{ secrets.captcha4 }} >> config.env
-          echo captcha5=${{ secrets.captcha5 }} >> config.env
+          echo CAPTCHA1=${{ secrets.CAPTCHA1 }} >> config.env
+          echo CAPTCHA2=${{ secrets.CAPTCHA2 }} >> config.env
+          echo CAPTCHA3=${{ secrets.CAPTCHA3 }} >> config.env
+          echo CAPTCHA4=${{ secrets.CAPTCHA4 }} >> config.env
+          echo CAPTCHA5=${{ secrets.CAPTCHA5 }} >> config.env
 
       - name: Create docker-compose
         run: |
