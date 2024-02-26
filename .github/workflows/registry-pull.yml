@@ -1,0 +1,41 @@
+name: Deploy by Runner
+
+on:
+  workflow_run:
+    workflows: ["Tests", "Docker Build"]
+    branches: ["prod"]
+    types:
+      - completed
+
+jobs:
+  prepare-environment:
+    runs-on: self-hosted
+    steps:
+      - name: Stop and remove containers, networks
+        run: docker compose down
+      - name: Remove unused data
+        run: docker system prune -a -f
+      - name: Cleanup build folder
+        run: |
+          rm -rf ./* || true
+
+  deploy:
+    runs-on: self-hosted
+    needs: prepare-environment
+    steps:
+      - name: Create env file
+        run: |
+          touch config.env
+          echo BOT_TOKEN=${{ secrets.BOT_TOKEN }} >> config.env
+          echo CHAT_ID=${{ secrets.CHAT_ID }} >> config.env
+          echo SD_SERVER_URL=${{ secrets.SD_SERVER_URL }} >> config.env
+      - name: Create docker-compose
+        run: |
+          touch docker-compose.yml
+          echo -e "version: \"3.8\"" >> docker-compose.yml
+          echo -e "services: " >> docker-compose.yml
+          echo -e "  TextSummary: " >> docker-compose.yml
+          echo -e "    image: registry.frants.site/textsummary:latest" >> docker-compose.yml
+          echo -e "    env_file: config.env" >> docker-compose.yml
+      - name: Run docker-compose
+        run: docker compose up -d
