@@ -11,23 +11,35 @@
 
 {% block page_content %}
 
-<section class="col-3 bg-dark text-white pt-4 pb-5">
-    <div class="justify-content-center">
-        <h1 class="text-primary">Verification Page</h1>
-        <form id="verify_form" action="{{ url_for('verify') }}" method="post">
-            <input type="hidden" id="captcha_id" name="captcha_id" value="{{ captcha_id }}"/>
-            <img class="col-12 rounded d-block" src="/static/images/captcha{{ captcha_id }}.png" alt="captcha">
-            <input type="text" class="form-control" name="captcha" placeholder="Type Captcha">
-            <br>
-            <!-- <button type="submit" class="g-recaptcha btn btn-primary" 
-                data-sitekey="{{ site_key }}" 
-                data-callback="onSubmit" 
-                data-action="submit">Submit
-            </button> -->
-            <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div>
-            <br>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+<section class="section section-sm bg-primary">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 mb-3">
+                <!-- Contact Card -->
+                <div class="card border-0 p-2 p-md-3 p-lg-5 bg-secondary">
+                    <div class="card-header border-0 text-center text-white">
+                        <h2 class="display-3 mb-3">Verification Page</h2>
+                    </div>
+                    <div class="card-body pt-0">
+                
+                        <form id="verify_form" action="{{ url_for('verify') }}" method="post">
+                            <input type="hidden" id="captcha_id" name="captcha_id" value="{{ captcha_id }}"/>
+                            <img class="col-12 rounded d-block" src="/static/images/captcha{{ captcha_id }}.png" alt="captcha">
+                            <input type="text" class="form-control mb-3" name="captcha" placeholder="Type Captcha">
+                            <!-- <button type="submit" class="g-recaptcha btn btn-primary" 
+                                data-sitekey="{{ site_key }}" 
+                                data-callback="onSubmit" 
+                                data-action="submit">Submit
+                            </button> -->
+                            <div class="g-recaptcha mb-3" data-sitekey="{{ site_key }}"></div>
+                            <div class="d-grid">
+                                <button type="submit" name="submit" class="btn btn-primary-app">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

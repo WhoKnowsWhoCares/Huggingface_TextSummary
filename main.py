@@ -116,7 +116,10 @@ def get_summary(text: TextRequest, request: gr.Request):
     return "Sorry. You are not verified."
 
 
-with gr.Blocks(css="/static/css/style.css") as demo:
+with gr.Blocks(
+    title="Text Summary",
+    # css=".gradio-container {background-color: #242e4c} "
+) as demo:
     with gr.Column(scale=2, min_width=600):
         sum_description = gr.Markdown(value=f"Model for Summary: {SUMMARY_MODEL}")
         verify_href = gr.Markdown(
