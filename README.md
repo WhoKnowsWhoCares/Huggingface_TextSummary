@@ -37,3 +37,9 @@ Rename .env_template to .env and fill variables:
 - `API_***` - constants for API authorization
 - `CAPTCHA***` - secrets on images from ./staric/images/\*
 - `PORT` - port for the service
+
+## To run
+
+```
+poetry run python run.py
+```
