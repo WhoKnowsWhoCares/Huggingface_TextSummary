@@ -3,6 +3,7 @@ import asyncio
 import random
 import gradio as gr
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -18,7 +19,17 @@ from dotenv import load_dotenv
 load_dotenv()
 SITE_KEY = os.getenv("SITE_KEY")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    event_loop = asyncio.get_event_loop()
+    pipe.set_loop(event_loop)
+    yield
+    # Clean up the ML models and release the resources
+    pipe.release_resources()
+
+
+app = FastAPI(lifespan=lifespan)
 users = AuthUsers()
 pipe = Summarizer()
 
@@ -34,12 +45,6 @@ templates = Jinja2Templates(directory="templates")
 # app.include_router(router)
 
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
-
-
-@app.on_event("startup")
-async def set_event_loop():
-    event_loop = asyncio.get_event_loop()
-    pipe.set_loop(event_loop)
 
 
 @app.middleware("http")
@@ -81,7 +86,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     await form.load_data()
     if await form.is_valid():
         logger.info("Form is valid")
-        response = RedirectResponse("/index", status_code=302)
+        response = RedirectResponse("/index/", status_code=302)
         response.set_cookie(key="Authorization", value=token)
         return response
     logger.info("Validation error")
@@ -90,7 +95,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
 
 @app.get("/")
 async def get_main_page():
-    return RedirectResponse("/index", status_code=302)
+    return RedirectResponse("/index/", status_code=302)
 
 
 @app.post("/get_summary_api", response_model=Result)
