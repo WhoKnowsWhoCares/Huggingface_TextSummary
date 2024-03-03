@@ -81,7 +81,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     await form.load_data()
     if await form.is_valid():
         logger.info("Form is valid")
-        response = RedirectResponse("/index", status_code=302)
+        response = RedirectResponse("/index/", status_code=302)
         response.set_cookie(key="Authorization", value=token)
         return response
     logger.info("Validation error")
@@ -90,7 +90,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
 
 @app.get("/")
 async def get_main_page():
-    return RedirectResponse("/index", status_code=302)
+    return RedirectResponse("/index/", status_code=302)
 
 
 @app.post("/get_summary_api", response_model=Result)

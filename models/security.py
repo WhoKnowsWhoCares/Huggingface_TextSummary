@@ -70,7 +70,7 @@ class AuthUsers:
         if user_token not in self.users:
             self.users.add(user_token)
             logger.info("Unauthorized user")
-        logger.info(f"Verified user with token: {user_token}")
+        logger.info(f"User with token: {user_token}")
         return user_token
 
 

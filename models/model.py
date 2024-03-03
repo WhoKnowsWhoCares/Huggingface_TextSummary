@@ -5,7 +5,7 @@ from transformers import pipeline
 from loguru import logger
 
 SUMMARY_MODEL = "csebuetnlp/mT5_multilingual_XLSum"
-MODEL_DIRECOTRY = "data/"
+MODEL_DIRECOTRY = "./data"
 TIME_TO_RELEASE = 10 * 60
 
 DEFAULT_TEXT = """Flags on official buildings are being flown at half-mast and a minute's silence will be observed at midday.
