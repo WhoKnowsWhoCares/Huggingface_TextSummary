@@ -70,11 +70,14 @@ class Summarizer(object):
     def set_loop(self, loop):
         self.loop = loop
 
-    async def timeout_callback(self):
-        await asyncio.sleep(0.1)
+    def release_resources(self):
         del self._summary_pipe
         self._summary_pipe = None
         gc.collect()
+
+    async def timeout_callback(self):
+        await asyncio.sleep(0.1)
+        self.release_resources()
         logger.info("Model released")
 
     def summarize(self, req: TextRequest) -> Result:
