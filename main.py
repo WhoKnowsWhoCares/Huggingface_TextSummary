@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import random
 import gradio as gr
@@ -18,6 +19,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SITE_KEY = os.getenv("SITE_KEY")
+
+logger.remove()
+logger.add(
+    "./logs/log_{time:YYYY-MM-DD}.log",
+    level="INFO",
+    rotation="00:01",
+    retention="30 days",
+    backtrace=True,
+    diagnose=True,
+)
+logger.add(sys.stdout, level="INFO")
 
 
 @asynccontextmanager
@@ -66,6 +78,7 @@ async def add_process_time_header(request: Request, call_next):
     ):
         return response
     if not token or token == "":
+        logger.info("User not verified")
         return RedirectResponse("/verify_page", status_code=307)
     return response
 
@@ -73,6 +86,7 @@ async def add_process_time_header(request: Request, call_next):
 @app.get("/verify_page", response_class=HTMLResponse)
 async def verify_page(request: Request):
     captcha_id = random.randint(1, 5)
+    logger.info(f"Verification form with Captcha ID: {captcha_id}")
     return templates.TemplateResponse(
         request=request,
         name="verification.html",
@@ -99,7 +113,7 @@ async def get_main_page():
 
 
 @app.post("/get_summary_api", response_model=Result)
-async def summ_api(
+def summ_api(
     request: TextRequest,
     username: Annotated[str, Depends(check_api_credentials)],
 ):

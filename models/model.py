@@ -60,11 +60,11 @@ class Summarizer(object):
     def __init__(self) -> None:
         self._release_timer = None
         self._summary_pipe = None
-        summary_pipe = pipeline(
-            "summarization", model=SUMMARY_MODEL, max_length=512, truncation=True
-        )
-        summary_pipe.save_pretrained(MODEL_DIRECOTRY)
-        del summary_pipe
+        # summary_pipe = pipeline(
+        #     "summarization", model=SUMMARY_MODEL, max_length=512, truncation=True
+        # )
+        # summary_pipe.save_pretrained(MODEL_DIRECOTRY)
+        # del summary_pipe
         gc.collect()
 
     def set_loop(self, loop):

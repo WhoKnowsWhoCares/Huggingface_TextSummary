@@ -1,4 +1,4 @@
-[![Build](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/build-test.yml/badge.svg?branch=prod)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/build-test.yml) [![Docker Build](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/docker-build-deploy.yml/badge.svg?branch=prod)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/docker-build-deploy.yml) [![Deploy by Runner](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/registry-pull.yml/badge.svg?branch=prod)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/registry-pull.yml)
+[![Build](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/build-test.yml/badge.svg?branch=master)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/build-test.yml) [![Docker Build](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/docker-build-deploy.yml/badge.svg?branch=master)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/docker-build-deploy.yml) [![Deploy by Runner](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/registry-pull.yml/badge.svg?branch=master)](https://github.com/WhoKnowsWhoCares/Huggingface_TextSummary/actions/workflows/registry-pull.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -37,3 +37,9 @@ Rename .env_template to .env and fill variables:
 - `API_***` - constants for API authorization
 - `CAPTCHA***` - secrets on images from ./staric/images/\*
 - `PORT` - port for the service
+
+## To run
+
+```
+poetry run python run.py
+```

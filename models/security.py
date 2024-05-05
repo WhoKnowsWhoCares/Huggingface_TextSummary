@@ -30,6 +30,7 @@ class AuthUsers:
         self.users_auth = defaultdict(list)
 
     def generate_user_token(self) -> str:
+        # TODO: add salt to token
         return secrets.token_hex(16)
 
     def verify_user(self, user_token: str) -> bool:

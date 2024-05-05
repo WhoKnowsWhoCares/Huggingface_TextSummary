@@ -21,13 +21,14 @@ class VerificationForm:
         data = await self.request.form()
         self.captcha = data.get("captcha")
         self.captcha_id = data.get("captcha_id")
-        logger.info(f"captcha: {self.captcha}")
+        self.g_recaptcha_response = data.get("g-recaptcha-response")
         logger.info(f"captcha_id: {self.captcha_id}")
-        # self.g_recaptcha_response = data.get("g-recaptcha-response")
 
     async def is_valid(self):
-        if not self.captcha or self.captcha.strip().lower() != os.getenv(
-            f"CAPTCHA{self.captcha_id}"
+        if (
+            not self.captcha
+            or not self.g_recaptcha_response
+            or self.captcha.strip().lower() != os.getenv(f"CAPTCHA{self.captcha_id}")
         ):
             return False
         return True
