@@ -97,11 +97,12 @@ async def verify_page(request: Request):
 @app.post("/verify")
 async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     form = VerificationForm(request)
-    await form.load_data()
     if await form.is_valid():
         logger.info("Form is valid")
         response = RedirectResponse("/index/", status_code=302)
-        response.set_cookie(key="Authorization", value=token)
+        response.set_cookie(
+            key="Authorization", value=token, secure=True, samesite="none"
+        )
         return response
     logger.info("Validation error")
     return await verify_page(request)

@@ -30,7 +30,7 @@ ENV PORT=8000 \
     HOST=0.0.0.0
 
 RUN apt update && \
-    apt install --no-install-recommends -y build-essential&& \
+    apt install --no-install-recommends -y build-essential curl&& \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
