@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from fastapi import Request
 from dotenv import load_dotenv
 from loguru import logger
@@ -12,23 +11,24 @@ VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
 class VerificationForm:
     request: Request
-    captcha: Optional[str] = None
 
     def __init__(self, request: Request):
         self.request = request
 
     async def load_data(self):
         data = await self.request.form()
-        self.captcha = data.get("captcha")
-        self.captcha_id = data.get("captcha_id")
-        self.g_recaptcha_response = data.get("g-recaptcha-response")
-        logger.info(f"captcha_id: {self.captcha_id}")
+        captcha = data.get("captcha")
+        captcha_id = data.get("captcha_id")
+        g_recaptcha_response = data.get("g-recaptcha-response")
+        logger.info(f"captcha_id: {captcha_id}")
+        return captcha, captcha_id, g_recaptcha_response
 
     async def is_valid(self):
+        captcha, captcha_id, g_recaptcha_response = await self.load_data()
         if (
-            not self.captcha
-            or not self.g_recaptcha_response
-            or self.captcha.strip().lower() != os.getenv(f"CAPTCHA{self.captcha_id}")
+            not captcha
+            or not g_recaptcha_response
+            or captcha.strip().lower() != os.getenv(f"CAPTCHA{captcha_id}")
         ):
             return False
         return True
