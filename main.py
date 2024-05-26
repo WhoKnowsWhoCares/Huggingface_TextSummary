@@ -59,28 +59,28 @@ templates = Jinja2Templates(directory="templates")
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 
 
-# @app.middleware("http")
-# async def add_process_time_header(request: Request, call_next):
-#     response = await call_next(request)
-#     token = request.cookies.get("Authorization")
-#     dest = request.url.path.split("/")[-1]
-#     resp_headers = dict(response.headers)
-#     cont_type = resp_headers.get("content-type")
-#     if (
-#         not cont_type
-#         or "text/html" not in cont_type
-#         or dest
-#         in [
-#             "docs",
-#             "verify_page",
-#             "verify",
-#         ]
-#     ):
-#         return response
-#     if not token or token == "":
-#         logger.info("User not verified")
-#         return RedirectResponse("/verify_page", status_code=307)
-#     return response
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    response = await call_next(request)
+    token = request.cookies.get("Authorization")
+    dest = request.url.path.split("/")[-1]
+    resp_headers = dict(response.headers)
+    cont_type = resp_headers.get("content-type")
+    if (
+        not cont_type
+        or "text/html" not in cont_type
+        or dest
+        in [
+            "docs",
+            "verify_page",
+            "verify",
+        ]
+    ):
+        return response
+    if not token or token == "":
+        logger.info("User not verified")
+        return RedirectResponse("/verify_page", status_code=307)
+    return response
 
 
 @app.get("/verify_page", response_class=HTMLResponse)
