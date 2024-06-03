@@ -125,7 +125,7 @@ def summ_api(
 
 def get_summary(text: TextRequest, request: gr.Request):
     try:
-        token = request.cookies["Authorization"]
+        token = request.cookies.get("Authorization")
         if users.verify_user(token):
             users.add_user_session(token)
             return pipe.get_summary(text)
