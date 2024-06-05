@@ -9,7 +9,7 @@ on:
 
 env:
   PORT: 6001
-  ENV_FILE: prod.env
+  ENV_FILE: .env
 
 jobs:
   prepare-environment:
