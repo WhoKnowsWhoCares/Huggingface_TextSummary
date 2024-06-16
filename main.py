@@ -83,7 +83,7 @@ app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 #     return response
 
 
-@app.post("/verify_page", response_class=HTMLResponse)
+@app.get("/verify_page", response_class=HTMLResponse)
 async def verify_page(request: Request):
     captcha_id = random.randint(1, 5)
     logger.info(f"Verification form with Captcha ID: {captcha_id}")
