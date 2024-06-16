@@ -28,4 +28,6 @@ services:
         "${PORT}",
         "--workers",
         "1",
+        "--forwarded-allow-ips",
+        "*",
       ]

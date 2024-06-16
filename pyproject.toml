@@ -21,6 +21,7 @@ passlib = "^1.7.4"
 sentencepiece = "^0.2.0"
 protobuf = "^4.25.3"
 transformers = "^4.38.1"
+cryptography = "^42.0.8"
 
 
 [tool.poetry.group.dev.dependencies]
