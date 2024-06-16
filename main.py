@@ -83,7 +83,7 @@ app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 #     return response
 
 
-@app.get("/verify_page", response_class=HTMLResponse)
+@app.post("/verify_page", response_class=HTMLResponse)
 async def verify_page(request: Request):
     captcha_id = random.randint(1, 5)
     logger.info(f"Verification form with Captcha ID: {captcha_id}")
@@ -99,7 +99,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     form = VerificationForm(request)
     if await form.is_valid():
         logger.info("Form is valid")
-        response = RedirectResponse("/index/", status_code=302)
+        response = RedirectResponse("/index/", status_code=301)
         response.set_cookie(
             key="Authorization", value=token, secure=True, samesite="none"
         )
@@ -110,7 +110,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
 
 @app.get("/")
 async def get_main_page():
-    return RedirectResponse("/index/", status_code=302)
+    return RedirectResponse("/index/", status_code=301)
 
 
 @app.post("/get_summary_api", response_model=Result)
