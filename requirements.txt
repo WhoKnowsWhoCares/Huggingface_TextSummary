@@ -1,6 +1,0 @@
-gradio
-transformers
-sentencepiece
-protobuf
-torch==1.13.1
-loguru
