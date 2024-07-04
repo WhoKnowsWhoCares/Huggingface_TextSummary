@@ -58,18 +58,11 @@ class Result(BaseModel):
         return f"Summary:  {self.summary}\nSentiment:  {self.sentiment_label} ({self.sentiment_score:.3f})"
 
 
-# class Response(BaseModel):
-#     results: List[Result] # list of Result objects
-
-
 class Summarizer:
     ru_summary_pipe: pipeline
     ru_sentiment_pipe: pipeline
     en_summary_pipe: pipeline
     en_sentiment_pipe: pipeline
-    # sum_model_name = "csebuetnlp/mT5_multilingual_XLSum"
-    # sum_tokenizer = AutoTokenizer.from_pretrained(sum_model_name)
-    # sum_model = AutoModelForSeq2SeqLM.from_pretrained(sum_model_name)
 
     def __init__(self) -> None:
         sum_pipe = pipeline(
