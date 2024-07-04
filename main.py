@@ -9,6 +9,8 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+
+# from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from typing import Annotated
 from loguru import logger
 from models.model import Summarizer, TextRequest, Result, DEFAULT_TEXT, SUMMARY_MODEL
@@ -58,6 +60,7 @@ templates = Jinja2Templates(directory="templates")
 
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 
+# app.add_middleware(HTTPSRedirectMiddleware)
 
 # @app.middleware("http")
 # async def add_process_time_header(request: Request, call_next):
@@ -99,7 +102,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
     form = VerificationForm(request)
     if await form.is_valid():
         logger.info("Form is valid")
-        response = RedirectResponse("/index/", status_code=302)
+        response = RedirectResponse("/index/", status_code=301)
         response.set_cookie(
             key="Authorization", value=token, secure=True, samesite="none"
         )
@@ -110,7 +113,7 @@ async def verify(request: Request, token: str = Depends(users.get_cookie_data)):
 
 @app.get("/")
 async def get_main_page():
-    return RedirectResponse("/index/", status_code=302)
+    return RedirectResponse("/index/", status_code=301)
 
 
 @app.post("/get_summary_api", response_model=Result)
@@ -125,7 +128,7 @@ def summ_api(
 
 def get_summary(text: TextRequest, request: gr.Request):
     try:
-        token = request.cookies["Authorization"]
+        token = request.cookies.get("Authorization")
         if users.verify_user(token):
             users.add_user_session(token)
             return pipe.get_summary(text)
@@ -138,7 +141,6 @@ def get_summary(text: TextRequest, request: gr.Request):
 
 with gr.Blocks(
     title="Text Summary",
-    # css=".gradio-container {background-color: #242e4c} "
 ) as demo:
     with gr.Column(scale=2, min_width=600):
         sum_description = gr.Markdown(value=f"Model for Summary: {SUMMARY_MODEL}")

@@ -46,4 +46,4 @@ COPY main.py /app/
 # Expose port
 EXPOSE $PORT
 
-CMD python -m uvicorn main:app --proxy-headers --host $HOST --port $PORT --workers 1
+CMD python -m uvicorn main:app --proxy-headers --host $HOST --port $PORT --workers 1 --forwarded-allow-ips '*'
