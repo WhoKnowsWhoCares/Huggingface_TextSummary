@@ -9,7 +9,8 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+# from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from typing import Annotated
 from loguru import logger
 from models.model import Summarizer, TextRequest, Result, DEFAULT_TEXT, SUMMARY_MODEL
@@ -59,7 +60,7 @@ templates = Jinja2Templates(directory="templates")
 
 app.add_exception_handler(MyHTTPException, my_http_exception_handler)
 
-app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 
 # @app.middleware("http")
 # async def add_process_time_header(request: Request, call_next):
